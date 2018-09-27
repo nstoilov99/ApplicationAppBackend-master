@@ -8,8 +8,8 @@ let order = (() => {
                     // Element dragging ended
                     onEnd: function (/**Event*/evt) {
                         var itemEl = evt.item;  // dragged HTMLElement
-                        console.log(evt.oldIndex);
-                        console.log(evt.newIndex);
+                        console.log('Old index: ' + evt.oldIndex);
+                        console.log('New index: ' + evt.newIndex);
                         remote.changeCategoryOrder(evt.oldIndex, evt.newIndex);
                     },
                 });
