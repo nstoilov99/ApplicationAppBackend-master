@@ -131,8 +131,26 @@ let remote = (() => {
         }
 
         async function deleteCategory(categoryId) {
-            let numberImages = await  firebase.database().ref('categories/' + categoryId + '/images').numChildren();
-            
+            let categoryRef = firebase.database().ref('categories/');
+            let snapNumberImages = await  firebase.database().ref('categories/' + categoryId + '/images').once('value');
+            let snapNumberCategories = await  firebase.database().ref('categories/').once('value');
+            let numberImages =await snapNumberImages.numChildren();
+            let numberCategories =await snapNumberCategories.numChildren();
+            console.log('Number of images: ' + numberImages);
+            console.log('Number of categories: ' + numberCategories);
+            for (let i = 0; i < numberImages; i++) {
+                let snapImageStorageRef =await firebase.database().ref('categories/' + categoryId + '/images').child(i).child('storageReference').once('value');
+                let imageStorageRef = snapImageStorageRef.val();
+                console.log('Storage reference: ' + imageStorageRef);
+                await firebase.database().ref('categories/' + categoryId + '/images').child(i).remove();
+                await firebase.storage().ref('images/').child(imageStorageRef).delete();
+            }
+            for (let i = parseInt(categoryId); i <numberCategories-1 ; i++) {
+                let nextValueSnap = await categoryRef.child(i+1).once('value');
+                let data = await nextValueSnap.val();
+                await  categoryRef.child(i).update(data)
+            }
+            await firebase.database().ref('categories/').child(numberCategories-1).remove();
         }
 
         async function deleteImageFromCategory(imageId, category) {
@@ -143,7 +161,7 @@ let remote = (() => {
 
             let imageNumber = await snapImg.numChildren();
             console.log('Image number: ' + imageNumber);
-            for (let i = parseInt(imageId)+1; i < imageNumber; i++) {
+            for (let i = parseInt(imageId)+1; i < imageNumber-1; i++) {
                 console.log('Image Id update: ' + i);
                 let nextValueSnap = await imagesRef.child('/images').child(i).once('value');
                 let data = await nextValueSnap.val();
@@ -275,7 +293,6 @@ let remote = (() => {
         }
 
         return {
-            uploadToFirebase,
             getAllCategories,
             changeCategoryOrder,
             getCategoryById,
