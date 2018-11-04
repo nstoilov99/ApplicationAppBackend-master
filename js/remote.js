@@ -131,6 +131,7 @@ let remote = (() => {
         }
 
         async function deleteCategory(categoryId) {
+            console.log(categoryId);
             let categoryRef = firebase.database().ref('categories/');
             let snapNumberImages = await  firebase.database().ref('categories/' + categoryId + '/images').once('value');
             let snapNumberCategories = await  firebase.database().ref('categories/').once('value');
@@ -142,15 +143,17 @@ let remote = (() => {
                 let snapImageStorageRef =await firebase.database().ref('categories/' + categoryId + '/images').child(i).child('storageReference').once('value');
                 let imageStorageRef = snapImageStorageRef.val();
                 console.log('Storage reference: ' + imageStorageRef);
-                await firebase.database().ref('categories/' + categoryId + '/images').child(i).remove();
+                // await firebase.database().ref('categories/' + categoryId + '/images').child(i).remove();
                 await firebase.storage().ref('images/').child(imageStorageRef).delete();
             }
-            for (let i = parseInt(categoryId); i <numberCategories-1 ; i++) {
-                let nextValueSnap = await categoryRef.child(i+1).once('value');
+            for (let i = parseInt(categoryId)+1; i <numberCategories ; i++) {
+                console.log(i);
+                let nextValueSnap = await categoryRef.child(i).once('value');
                 let data = await nextValueSnap.val();
-                await  categoryRef.child(i).update(data)
+                console.log(data);
+                await  categoryRef.child(i-1).update(data);
             }
-            await firebase.database().ref('categories/').child(numberCategories-1).remove();
+            await firebase.database().ref('categories/').child(numberCategories - 1).remove();
         }
 
         async function deleteImageFromCategory(imageId, category) {
@@ -161,7 +164,7 @@ let remote = (() => {
 
             let imageNumber = await snapImg.numChildren();
             console.log('Image number: ' + imageNumber);
-            for (let i = parseInt(imageId)+1; i < imageNumber-1; i++) {
+            for (let i = parseInt(imageId)+1; i < imageNumber; i++) {
                 console.log('Image Id update: ' + i);
                 let nextValueSnap = await imagesRef.child('/images').child(i).once('value');
                 let data = await nextValueSnap.val();
